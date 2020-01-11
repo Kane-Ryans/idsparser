@@ -83,31 +83,52 @@ def create_file():
         m.results_file()
 
 
-def run_dashboard():
+def run_dashboard(cve_file, app_file):
 
     # Print File Paths
-    print(f"Source File: {m.src_file} | Destination File: {m.dst_file}")
+    click.echo(click.style('Filenames:', bold=True))
+    click.echo(click.style(f'Source File: {m.src_file}', fg='green'))
+    click.echo(click.style(f'Destination File: {m.dst_file}', fg='green'))
+    # print("\n")
+    # if cve_file:
+    #     click.echo(click.style(f' # {len(m.cves)} CVEs have been loaded'))
+    # if app_file:
+    #     click.echo(click.style(f' # {len(m.apps)} Apps have been loaded'))
+    if cve_file and app_file:
+        click.echo(click.style(f' # {len(m.cves)} CVEs have been loaded', fg='green'))
+        click.echo(click.style(f' # {len(m.apps)} Apps have been loaded', fg='green'))
+    elif cve_file:
+        click.echo(click.style(f' # {len(m.cves)} CVEs have been loaded', fg='green'))
+    elif app_file:
+        click.echo(click.style(f' # {len(m.apps)} Apps have been loaded', fg='green'))
+    print('-' * 10)
 
-    # Pre-Modification Table Stats
     print("\n")
-    click.echo(click.style(tabulate.tabulate(
-        [['Active', m.metrics['pre-modification']['active']],
-         [f'{BColor.RED}Disabled{BColor.ENDC}', f"{BColor.RED}{m.metrics['pre-modification']['disabled']}{BColor.ENDC}"],
-         [f'{BColor.BOLD}Total{BColor.ENDC}', f"{BColor.BOLD}{m.metrics['pre-modification']['total']}{BColor.ENDC}"]],
-        headers=[f'{BColor.BOLD}Pre-Modification{BColor.ENDC}', ""], tablefmt='github'), fg='white'))
-    print("\n")
-
-    if m.rules_modified:
+    if not m.rules_modified:
+        # Pre-Modification Table Stats 
+        click.echo(click.style(tabulate.tabulate(
+            [['Active', m.metrics['pre-modification']['active']],
+            [f'{BColor.RED}Disabled{BColor.ENDC}', f"{BColor.RED}{m.metrics['pre-modification']['disabled']}{BColor.ENDC}"],
+            [f'{BColor.BOLD}Total{BColor.ENDC}', f"{BColor.BOLD}{m.metrics['pre-modification']['total']}{BColor.ENDC}"]],
+            headers=["", 
+            f'{BColor.BOLD}Pre-Modification{BColor.ENDC}'], 
+            tablefmt='github'), fg='white'
+        ))
+    else:
         # Post Modification Table Stats
         click.echo(click.style(tabulate.tabulate(
-            [['Active', m.metrics['post-modification']['active']],
-            [f'{BColor.RED}Disabled{BColor.ENDC}', f"{BColor.RED}{m.metrics['post-modification']['disabled']}{BColor.ENDC}"],
-            [f'{BColor.BOLD}Total{BColor.ENDC}', f"{BColor.BOLD}{m.metrics['post-modification']['total']}{BColor.ENDC}"]],
-            headers=[f'{BColor.BOLD}Post-Modification{BColor.ENDC}', ""], tablefmt='github'), fg='white'))
+            [['Active', m.metrics['pre-modification']['active'],m.metrics['post-modification']['active']],
+            [f'{BColor.RED}Disabled{BColor.ENDC}', f"{BColor.RED}{m.metrics['pre-modification']['disabled']}{BColor.ENDC}", f"{BColor.RED}{m.metrics['post-modification']['disabled']}{BColor.ENDC}"],
+            [f'{BColor.BOLD}Total{BColor.ENDC}', f"{BColor.BOLD}{m.metrics['pre-modification']['total']}{BColor.ENDC}", f"{BColor.BOLD}{m.metrics['post-modification']['total']}{BColor.ENDC}"]],
+            headers=["", 
+            f'{BColor.BOLD}Pre-Modification{BColor.ENDC}',
+            f'{BColor.BOLD}Post-Modification{BColor.ENDC}'],
+            tablefmt='github'), fg='white'
+        ))
     print("\n")
-
-    print(m.apps)
-
+    if m.user_options:
+        click.echo(click.style('Classtype\s Selected:', bold=True))
+        click.echo(click.style(f'{m.user_options}'))
 
 # CLI arg options and main process function
 @click.command()
@@ -147,22 +168,29 @@ def process(src, dst, app_file, cve_file, verbose):
 
     user_selection = ""
 
+    user_options = {
+        '1': modify_rules,
+        '2': create_file if m.rules_modified else ""
+    }
+
     while user_selection != "q":
-        print("\nWelcome to the App, press 'q' to exit\n")
-        print("1. View the rule dashboard?")
-        print("2. Alter the rule sets?")
+        os.system('clear')
+        click.echo(click.style("\nWelcome to the App, press 'q' to exit\n", bold=True))
+        run_dashboard(cve_file, app_file)
+        print('-' * 10)
+        print("1. Modify Rule Set via Classtype Selection")
+        print("2. Create File")
+        print('-' * 10)
         if m.rules_modified:
             print("3. Create the new rule file?")
         user_selection = input("> ")
-        
-        if user_selection == "1":
-            run_dashboard()
-        elif user_selection == "2":
-            modify_rules()
-        elif user_selection == "3":
-            create_file()
+        if user_selection in user_options.keys():
+            user_options[user_selection]()
         elif user_selection == "q":
             break
+        else:
+            print('Please enter a valid option')
+        
 
 if __name__ =="__main__":
     process()
