@@ -8,6 +8,8 @@ class Mappings:
         self.classifications = set()
         self.classifications_desc = {}
         self.user_options = set()
+        self.apps = set()
+        self.cves = set()
         self.rules_modified = False
         self.src_file = ""
         self.dst_file = ""
@@ -48,6 +50,24 @@ class Mappings:
                 return (s for s in snort.readlines())
         except OSError as e:
             print(e)
+
+    def open_csv_file(self, filename, input_type):
+
+        if input_type == 'apps':
+            with open(filename, 'r', encoding='utf-8-sig') as f:
+                for app in f.readlines():
+                    new_app = app.split(',')[0].strip().lower()
+                    self.apps.add(new_app)
+
+        elif input_type == 'cve':
+            with open(filename, 'r', encoding='utf-8-sig') as f:
+                for cve in f.readlines():
+                    if cve.startswith('cve,'):
+                        new_cve = cve.split(",")[1].strip()
+                        self.cves.add(new_cve)
+                    else:
+                        new_cve = cve.strip()
+                        self.cves.add(new_cve)
             
 
     def results_file(self):
@@ -98,7 +118,16 @@ class Mappings:
         self.metrics['post-modification']['total'] = 0
 
         for rule in self.rules:
-            if rule.classtype in self.user_options:
+
+            if self.apps and rule.does_app_appear_in_rule_msg(self.apps):
+                self.alter_rule(rule, state="enable")
+                self.metrics['post-modification']['active'] += 1
+            
+            elif self.cves and rule.does_cve_exist(self.cves):
+                self.alter_rule(rule, state="enable")
+                self.metrics['post-modification']['active'] += 1
+
+            elif rule.classtype in self.user_options:
                 self.alter_rule(rule, state='enable')
                 self.metrics['post-modification']['active'] += 1
             else:
@@ -129,14 +158,14 @@ class Mappings:
 
 # Class for holding important information of each rule into an object
 class Snort:
-    def __init__(self, state, msg, classtype, sid, rev, full_rule):
+    def __init__(self, state, msg, classtype, sid, rev, full_rule, cve = []):
         self.state = state
         self.msg = msg
         self.classtype = classtype
         self.sid = sid
         self.rev = rev
-        # self.refs = refs
         self.full_rule = full_rule
+        self.cve = cve
 
     def __getitem__(self, item):
          return item
@@ -147,6 +176,11 @@ class Snort:
     def __repr__(self):
         return f"<Snort msg={self.msg} classtype={self.classtype} sid={self.sid} rev={self.rev} full_rule={self.full_rule}"
 
+    def does_cve_exist(self, external_cve_list):
+        return any(cve in external_cve_list for cve in self.cve)
+
+    def does_app_appear_in_rule_msg(self, external_app_list):
+        return any(app.lower() in self.msg.lower() for app in external_app_list)
 
 
 # Class for adding colors to the statistics dashboards

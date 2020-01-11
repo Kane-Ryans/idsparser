@@ -11,11 +11,22 @@ def process_rules():
     file_generator = m.open_file()
     # Regex pattern to pull out the values needed to initialise the Snort() class
     snort_re_pattern = r'(?<=msg:")[^";]*(?=";)|(?<=classtype:)[\w-]*(?=;)|(?<=sid:)\d*(?=;)|(?<=rev:)\d*(?=;)'
+    snort_cve_re_pattern = r'(?<=cve,)[\d-]*(?=;)'
     for rule in file_generator:
+
+        cve = []
+
+        if re.search(snort_cve_re_pattern, rule):
+            cve = re.findall(snort_cve_re_pattern, rule)
+
         # Disabled rules code execution
         if rule.startswith("# alert"):
             msg, classtype, sid, rev = re.findall(snort_re_pattern, rule)
             s = Snort(state="disabled", msg=msg, classtype=classtype, sid=sid, rev=rev, full_rule=rule)
+
+            if cve:
+                s.cve = cve
+
             m.import_classifications(s.classtype)
             m.generate_initial_statistics(action="disabled")
             m.rules.append(s)
@@ -30,6 +41,10 @@ def process_rules():
         elif rule.startswith("alert"):
             msg, classtype, sid, rev = re.findall(snort_re_pattern, rule)
             s = Snort(state="active", msg=msg, classtype=classtype, sid=sid, rev=rev, full_rule=rule)
+
+            if cve:
+                s.cve = cve
+            
             m.import_classifications(s.classtype)
             m.generate_initial_statistics(action="enabled")
             m.rules.append(s)
@@ -91,6 +106,8 @@ def run_dashboard():
             headers=[f'{BColor.BOLD}Post-Modification{BColor.ENDC}', ""], tablefmt='github'), fg='white'))
     print("\n")
 
+    print(m.apps)
+
 
 # CLI arg options and main process function
 @click.command()
@@ -100,8 +117,14 @@ def run_dashboard():
 @click.option("--dst", "-d",
     help="[DEFAULT: if none selected, will append '.old' to src file, and replace with the dst file] Local path to the finalised rule file.",
     type=click.Path(dir_okay=False))
+@click.option("--app-file", "-app",
+    help="Path to the CSV holding a 2 column list (application_name,version) to enable rules on",
+    type=click.Path(exists=True, dir_okay=False, readable=True))
+@click.option("--cve-file", "-cve",
+    help="Path to the CSV holding a 1 column list (e.g. cve,2018-1111) to enable rules on",
+    type=click.Path(exists=True, dir_okay=False, readable=True))
 @click.option("--verbose", is_flag=True, help="Verbose output")
-def process(src, dst, verbose):
+def process(src, dst, app_file, cve_file, verbose):
     """ Processes the input rule file - allows the user to modify the rules via interactive classtype selection -
     and saves the new rules to an output rule file.
     """
@@ -113,6 +136,12 @@ def process(src, dst, verbose):
         m.dst_file = src[:]
     else:
         m.dst_file = dst
+
+    if app_file:
+        m.open_csv_file(app_file, input_type='apps')
+    
+    if cve_file:
+        m.open_csv_file(cve_file, input_type='cve')
 
     process_rules()
 
