@@ -127,7 +127,7 @@ def run_dashboard(cve_file, app_file):
         ))
     print("\n")
     if m.user_options:
-        click.echo(click.style('Classtype\s Selected:', bold=True))
+        click.echo(click.style("Classtype's Selected:", bold=True))
         click.echo(click.style(f'{m.user_options}'))
 
 # CLI arg options and main process function
