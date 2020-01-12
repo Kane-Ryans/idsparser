@@ -51,6 +51,13 @@ class Mappings:
         except OSError as e:
             print(e)
 
+    def open_directory(self, file):
+        try:
+            with open(os.path.join(self.src_file, file), 'r') as snort:
+                return (s for s in snort.readlines())
+        except OSError as e:
+            print(e)
+
     def open_csv_file(self, filename, input_type):
 
         if input_type == 'apps':
