@@ -5,51 +5,46 @@ from .libs.classproperties import Mappings, Snort, BColor
 # Instantiate Mappings() class for future functions
 m = Mappings()
 
+def source_file_check():
+    # Check if user input is a directory or file, and call the appropriate open file class moethod
+    if os.path.isdir(m.src_file):
+        for file in os.listdir(m.src_file):
+            if file.endswith('.rules'):
+                file_generator = m.open_directory(file)
+                process_rules(file_generator)
+    elif os.path.isfile(m.src_file):
+        file_generator = m.open_file()
+        process_rules(file_generator)
 
-def process_rules():
-    # Call Mapping() open_file class method to obtain the Src files generator, ready for iteration
-    file_generator = m.open_file()
+def process_rules(file_generator):
     # Regex pattern to pull out the values needed to initialise the Snort() class
+    snort_rule_check_pattern = r'^#\s(alert|drop|log|activate)|^(alert|drop|log|activate)'
     snort_re_pattern = r'(?<=msg:")[^";]*(?=";)|(?<=classtype:)[\w-]*(?=;)|(?<=sid:)\d*(?=;)|(?<=rev:)\d*(?=;)'
     snort_cve_re_pattern = r'(?<=cve,)[\d-]*(?=;)'
     for rule in file_generator:
 
         cve = []
-
         if re.search(snort_cve_re_pattern, rule):
             cve = re.findall(snort_cve_re_pattern, rule)
 
-        # Disabled rules code execution
-        if rule.startswith("# alert"):
+        if re.search(snort_rule_check_pattern, rule):
             msg, classtype, sid, rev = re.findall(snort_re_pattern, rule)
             s = Snort(state="disabled", msg=msg, classtype=classtype, sid=sid, rev=rev, full_rule=rule)
+            m.import_classifications(s.classtype)
 
             if cve:
                 s.cve = cve
 
-            m.import_classifications(s.classtype)
-            m.generate_initial_statistics(action="disabled")
-            m.rules.append(s)
+            if rule.startswith('#'):
+                # Disabled rules code execution
+                m.generate_initial_statistics(action="disabled")
+                m.rules.append(s)
+            elif not rule.startswith('#'):
+                # Enabled rules code execution
+                s.state = "active"
+                m.generate_initial_statistics(action="enabled")
+                m.rules.append(s)
 
-            # Add metrics for disabled rules as they are being imported and instantiated
-            if s.classtype in m.metrics['counts'].keys():
-                m.metrics['counts'][s.classtype] += 1
-            else:
-                m.metrics['counts'][s.classtype] = 1
-        
-        # Enabled rules code execution
-        elif rule.startswith("alert"):
-            msg, classtype, sid, rev = re.findall(snort_re_pattern, rule)
-            s = Snort(state="active", msg=msg, classtype=classtype, sid=sid, rev=rev, full_rule=rule)
-
-            if cve:
-                s.cve = cve
-            
-            m.import_classifications(s.classtype)
-            m.generate_initial_statistics(action="enabled")
-            m.rules.append(s)
-
-            # Add metrics for enabled rules as they are being imported and instantiated
             if s.classtype in m.metrics['counts'].keys():
                 m.metrics['counts'][s.classtype] += 1
             else:
@@ -134,7 +129,7 @@ def run_dashboard(cve_file, app_file):
 @click.command()
 @click.option("--src", "-s", required=True,
     help="Local path to ids rule file to be processed.",
-    type=click.Path(exists=True, dir_okay=False, readable=True))
+    type=click.Path(exists=True, dir_okay=True, readable=True))
 @click.option("--dst", "-d",
     help="[DEFAULT: if none selected, will append '.old' to src file, and replace with the dst file] Local path to the finalised rule file.",
     type=click.Path(dir_okay=False))
@@ -164,13 +159,13 @@ def process(src, dst, app_file, cve_file, verbose):
     if cve_file:
         m.open_csv_file(cve_file, input_type='cve')
 
-    process_rules()
+    source_file_check()
 
     user_selection = ""
 
     user_options = {
         '1': modify_rules,
-        '2': create_file if m.rules_modified else ""
+        '2': create_file
     }
 
     while user_selection != "q":
@@ -181,8 +176,6 @@ def process(src, dst, app_file, cve_file, verbose):
         print("1. Modify Rule Set via Classtype Selection")
         print("2. Create File")
         print('-' * 10)
-        if m.rules_modified:
-            print("3. Create the new rule file?")
         user_selection = input("> ")
         if user_selection in user_options.keys():
             user_options[user_selection]()
