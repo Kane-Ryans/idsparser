@@ -24,6 +24,8 @@ class Mappings:
                 "disabled": 0,
                 "total": 0
             },
+            "matched-apps": 0,
+            "matched-cves": 0,
             "counts": {}
         }
         self.import_classification_desc()
@@ -78,6 +80,11 @@ class Mappings:
             
 
     def results_file(self):
+
+        if os.path.exists(self.dst_file):
+            # if the dst file exists, then remove it before creating the new file
+            os.remove(self.dst_file)
+        # if dst file was not specified, by this point the original ruleset will have been appended by .old, so it will not be removed
         with open(self.dst_file, 'a') as f:
             # Prepare enabled section of results file
             f.write("\n\n# ** Enabled **\n\n")
@@ -129,10 +136,12 @@ class Mappings:
             if self.apps and rule.does_app_appear_in_rule_msg(self.apps):
                 self.alter_rule(rule, state="enable")
                 self.metrics['post-modification']['active'] += 1
+                self.metrics['matched-apps'] += 1
             
             elif self.cves and rule.does_cve_exist(self.cves):
                 self.alter_rule(rule, state="enable")
                 self.metrics['post-modification']['active'] += 1
+                self.metrics['matched-cves'] += 1
 
             elif rule.classtype in self.user_options:
                 self.alter_rule(rule, state='enable')

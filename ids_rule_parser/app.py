@@ -84,17 +84,16 @@ def run_dashboard(cve_file, app_file):
     click.echo(click.style('Filenames:', bold=True))
     click.echo(click.style(f'Source File: {m.src_file}', fg='green'))
     click.echo(click.style(f'Destination File: {m.dst_file}', fg='green'))
-    # print("\n")
-    # if cve_file:
-    #     click.echo(click.style(f' # {len(m.cves)} CVEs have been loaded'))
-    # if app_file:
-    #     click.echo(click.style(f' # {len(m.apps)} Apps have been loaded'))
+    # Print only if the user has imported App or CVE CSV files
     if cve_file and app_file:
+        click.echo(click.style('Additionally:', bold=True))
         click.echo(click.style(f' # {len(m.cves)} CVEs have been loaded', fg='green'))
         click.echo(click.style(f' # {len(m.apps)} Apps have been loaded', fg='green'))
     elif cve_file:
+        click.echo(click.style('Additionally:', bold=True))
         click.echo(click.style(f' # {len(m.cves)} CVEs have been loaded', fg='green'))
     elif app_file:
+        click.echo(click.style('Additionally:', bold=True))
         click.echo(click.style(f' # {len(m.apps)} Apps have been loaded', fg='green'))
     print('-' * 10)
 
@@ -121,9 +120,14 @@ def run_dashboard(cve_file, app_file):
             tablefmt='github'), fg='white'
         ))
     print("\n")
+    # Print post processing stats - user classtypes selected, the number of rules matching imported apps and cves
     if m.user_options:
         click.echo(click.style("Classtype's Selected:", bold=True))
-        click.echo(click.style(f'{m.user_options}'))
+        click.echo(click.style(f'{", ".join(m.user_options)}'))
+        if app_file:
+            click.echo(click.style(f'Rules matching imported Apps: {m.metrics["matched-apps"]}', bold=True))
+        if cve_file:
+            click.echo(click.style(f'Rules matching imported CVEs: {m.metrics["matched-cves"]}', bold=True))
 
 # CLI arg options and main process function
 @click.command()
@@ -168,21 +172,48 @@ def process(src, dst, app_file, cve_file, verbose):
         '2': create_file
     }
 
+    errmsg = None
+
     while user_selection != "q":
         os.system('clear')
-        click.echo(click.style("\nWelcome to the App, press 'q' to exit\n", bold=True))
+        click.echo(click.style(r"""
+    ____ ____  _____    ____                                
+   /  _// __ \/ ___/   / __ \ ____ _ _____ _____ ___   _____
+   / / / / / /\__ \   / /_/ // __ `// ___// ___// _ \ / ___/
+ _/ / / /_/ /___/ /  / ____// /_/ // /   (__  )/  __// /    
+/___//_____//____/  /_/     \__,_//_/   /____/ \___//_/     
+
+        """, fg='green'))
         run_dashboard(cve_file, app_file)
+        print('-' * 10)
+        click.echo(click.style("\nWelcome to the App | Enter the menu option number to continue OR enter 'q' to quit\n", bold=True))
+        # Will show an error message above the menu selection if populated, once printed errmsg will be set back to None so it isn't shown after a valid selection
+        if errmsg != None:
+            click.echo(click.style(f"{errmsg}", bold=True, fg='red'))
+            errmsg = None
         print('-' * 10)
         print("1. Modify Rule Set via Classtype Selection")
         print("2. Create File")
         print('-' * 10)
         user_selection = input("> ")
         if user_selection in user_options.keys():
+            # Display error if user tries to create a file when no modifications have been made
+            if user_selection == '2' and not m.rules_modified:
+                errmsg = 'No changes have been made. Please make changes before attempting to generate a new rule set file'
+                continue
+
             user_options[user_selection]()
+
+            if user_selection == '2':
+                os.system('clear')
+                click.echo(click.style(f'New ruleset created, and stored at: {m.dst_file}', bold=True))
+                break
         elif user_selection == "q":
+            os.system('clear')
+            click.echo(click.style('Goodbye!', bold=True))
             break
         else:
-            print('Please enter a valid option')
+            errmsg = 'Please enter a valid option'
         
 
 if __name__ =="__main__":
