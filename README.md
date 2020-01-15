@@ -21,7 +21,7 @@ $ python3 -m idsparser
 
 ### Visual
 
-![](idsparser2.gif)
+![](idsparser-640px.gif)
 
 ## Roadmap
 
