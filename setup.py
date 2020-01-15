@@ -1,12 +1,12 @@
 from setuptools import setup
 
 setup(
-    name = 'ids_rule_parser',
+    name = 'idsparser',
     version = '0.1.0',
-    packages = ['ids_rule_parser'],
+    packages = ['idsparser'],
     entry_points = {
         'console_scripts': [
-            'ids_rule_parser = ids_rule_parser.__main__:main'
+            'idsparser = idsparser.__main__:main'
         ]
     }
 )
