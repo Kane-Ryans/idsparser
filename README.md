@@ -21,6 +21,8 @@ $ python3 -m idsparser
 
 ### Visual
 
+![](idsparser.gif)
+
 ## Roadmap
 
 * Improve the flow and visual of the menu/dashboard
