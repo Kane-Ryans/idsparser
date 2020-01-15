@@ -14,6 +14,11 @@ The tool will then ouput the newly modified ruleset into a file organised into c
 
 ### Launching
 
+```bash
+$ cd ids_rule_parser/
+$ python3 -m ids_rule_parser
+```
+
 ### Visual
 
 ## Roadmap
