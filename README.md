@@ -1,6 +1,6 @@
-# ids_rule_parser
+# idsparser
 
-ids_rule_parser is a CLI based python tool for interactively enabling and disabling Snort based IDS rules. The tool can either be passed a single rule file (community rules), or a directory of rule files (subscriber based rules).
+idsparser is a CLI based python tool for interactively enabling and disabling Snort based IDS rules. The tool can either be passed a single rule file (community rules), or a directory of rule files (subscriber based rules).
 
 Additionally, the tool can also be passed CSV files of known applications in use on the network the rules will be monitoring, and CVEs typically identified via a vulnerability scanner. If these CSV files are passed in as options, any rules containing the CVEs or applications will be enabled automatically.
 
@@ -15,8 +15,8 @@ The tool will then ouput the newly modified ruleset into a file organised into c
 ### Launching
 
 ```bash
-$ cd ids_rule_parser/
-$ python3 -m ids_rule_parser
+$ cd idsparser/
+$ python3 -m idsparser
 ```
 
 ### Visual
