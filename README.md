@@ -2,13 +2,13 @@
 
 idsparser is a CLI based python tool for interactively enabling and disabling Snort based IDS rules. 
 
-The tool can either utilised by:
+In short, idsparser offers the following key features:
 * Passing a single rule file (community rules), or a directory of rule files (subscriber based rules).
-* Passing a CSV (click here for formatting) of application names. Any rules containing the app name will be enabled.
-* Passing a CSV (click here for formatting) of CVE names. Any rules containing references to these CVEs will be enabled.
+* Passing a CSV (click [here](./examples_files/applications.csv) for formatting) of application names. Any rules containing the app name will be enabled.
+* Passing a CSV (click [here](./examples_files/vulnerabilities.csv) for formatting) of CVE names. Any rules containing references to these CVEs will be enabled.
 * Through a multi-selection menu, allows the user to enable rules of a particular classtype e.g. trojan-activity, etc
 
-Once finished, idsparser will then ouput the newly modified ruleset into a file organised into clear enabled/disabled sections, as well as identifying at the top which classtypes were chosen by the user.
+Once finished, idsparser will then ouput the newly modified ruleset into a file organised into clear enabled/disabled sections, as well as identifying at the top which classtypes were chosen by the user. If the output file was not specified, then the original source file will be appended with '.old' and the output file taking on the formers name.
 
 Additionally, a dashboard of statistics on the rule file are shown for a clear understanding of what is happening during the process.
 
