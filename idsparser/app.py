@@ -1,4 +1,8 @@
-import click, os, pick, re, tabulate
+import click
+import os
+import pick
+import re
+import tabulate
 from funcy import identity
 from .libs.classproperties import Mappings, Snort, BColor
 
@@ -69,7 +73,7 @@ def modify_rules():
 
 
 def create_file():
-
+    # If no destination file specified, append source file with .old, so the new file can be created with the original name 
     if m.src_file == m.dst_file:
         os.rename(m.src_file, m.src_file + ".old")
         m.src_file = m.src_file + ".old"
@@ -79,7 +83,6 @@ def create_file():
 
 
 def run_dashboard(cve_file, app_file):
-
     # Print File Paths
     click.echo(click.style('Filenames:', bold=True))
     click.echo(click.style(f'Source File: {m.src_file}', fg='green'))
@@ -149,7 +152,6 @@ def process(src, dst, app_file, cve_file, verbose):
     and saves the new rules to an output rule file.
     """
 
-    # verbose_print = print if verbose else identity
     # set filenames from arguments
     m.src_file = src
     if dst == None:
@@ -216,5 +218,5 @@ def process(src, dst, app_file, cve_file, verbose):
             errmsg = 'Please enter a valid option'
         
 
-if __name__ =="__main__":
+if __name__ == "__main__":
     process()

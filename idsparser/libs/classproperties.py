@@ -61,7 +61,6 @@ class Mappings:
             print(e)
 
     def open_csv_file(self, filename, input_type):
-
         if input_type == 'apps':
             with open(filename, 'r', encoding='utf-8-sig') as f:
                 for app in f.readlines():
@@ -80,24 +79,22 @@ class Mappings:
             
 
     def results_file(self):
+        """Create results file.
+        
+        If there is already a current file with the same name, the application will remove and replace with a new rule file"""
 
         if os.path.exists(self.dst_file):
-            # if the dst file exists, then remove it before creating the new file
             os.remove(self.dst_file)
-        # if dst file was not specified, by this point the original ruleset will have been appended by .old, so it will not be removed
+
         with open(self.dst_file, 'a') as f:
             # Prepare enabled section of results file
             f.write("\n\n# ** Enabled **\n\n")
             f.write(f"Filtered based on classifications: {', '.join(self.user_options)}\n\n")
             # Prepare generator for file write
             enabled_rules = (rule.full_rule for rule in self.rules if rule.state == "active")
-            # Iterate over the next values in the generator for enabled rules
             [f.writelines(rule) for rule in enabled_rules]
-            # Prepare disabled section of results file
             f.write("\n\n# ** Disabled **\n\n")
-            # Prepare generator for file write
             disabled_rules = (rule.full_rule for rule in self.rules if rule.state == "disabled")
-            # Iterate over the next values in the generator for disabled rules
             [f.writelines(rule) for rule in disabled_rules]
 
 
@@ -111,7 +108,8 @@ class Mappings:
 
 
     def generate_initial_statistics(self, action):
-        # generate initial statistics upon loading the source rule file
+        """Generate initial statistics upon loading the source rule file"""
+
         if action == "enabled":
             self.metrics['pre-modification']['active'] += 1
             self.metrics['pre-modification']["total"] += 1
@@ -121,7 +119,8 @@ class Mappings:
    
 
     def import_classifications(self, classtype):
-        # save the classtypes found in the source file, for later user use
+        """Save the classtypes found in the source file for later user use"""
+
         self.classifications.add(classtype)
     
 
@@ -132,7 +131,6 @@ class Mappings:
         self.metrics['post-modification']['total'] = 0
 
         for rule in self.rules:
-
             if self.apps and rule.does_app_appear_in_rule_msg(self.apps):
                 self.alter_rule(rule, state="enable")
                 self.metrics['post-modification']['active'] += 1
@@ -155,6 +153,8 @@ class Mappings:
   
 
     def alter_rule(self, rule, state):
+        """Enable/Disable altering logic to be applied to rule being evaluated"""
+
         # if rule is disabled, then slice out the '# ' to enable
         if rule.state == "disabled" and state == 'enable':
             rule.full_rule = rule.full_rule[2:]

@@ -31,14 +31,21 @@ $ cd idsparser/
 $ python3 -m idsparser
 ```
 
+## Techniques Used
+
+* CLI Arguments
+* Interactive user menu and multi-selector 3rd party package
+* OS dir/file and CSV reading and writing
+* OOP
+* Generators
+* Sets
+* Lambda
+
 ## Roadmap
 
 * Improve the flow and visual of the menu/dashboard
-
 * Add the ability for a user to search for specific rules once the rule files have been loaded, and then to toggle between enabled/disable.
-
 * If the src is a directory of rules (typically with subscriber based rule sets) then output the results in a similar fashion, so that large amount of rules are not contained in the same rule file.
-
 * Add functionality for Suricata based rules.
 
 ## Contributing
