@@ -31,6 +31,28 @@ $ cd idsparser/
 $ python3 -m idsparser
 ```
 
+Menu Options
+```bash
+Usage: __main__.py [OPTIONS]
+
+  Processes the input rule file - allows the user to modify the rules via
+  interactive classtype selection - and saves the new rules to an output
+  rule file.
+
+Options:
+  -s, --src PATH         Local path to ids rule file to be processed.
+                         [required]
+  -d, --dst FILE         [DEFAULT: if none selected, will append '.old' to src
+                         file, and replace with the dst file] Local path to
+                         the finalised rule file.
+  -app, --app-file FILE  Path to the CSV holding a 2 column list
+                         (application_name,version) to enable rules on
+  -cve, --cve-file FILE  Path to the CSV holding a 1 column list (e.g.
+                         cve,2018-1111) to enable rules on
+  --verbose              Verbose output
+  --help                 Show this message and exit.
+```
+
 ## Techniques Used
 
 * CLI Arguments
